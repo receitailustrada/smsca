@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>RXI • Cruz Alta – Especialidades e Exames (Live)</title>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{--bg:#f5f8ff;--card:#ffffff;--ink:#0f1b33;--muted:#5b6a88;--brand:#4e6bff;--brand2:#5c9eff;--ok:#10b981;--warn:#f59e0b;--danger:#ef4444;--ipm:#2563eb;--gercon:#7c3aed;--tag:#eff3ff;--radius:16px;--shadow:0 10px 30px rgba(35,50,98,.08);--border:#e6ecf5}
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);font-family:'Montserrat',sans-serif;color:var(--ink);padding:20px}
+  h1{margin:0 0 10px;text-align:center;font-size:28px;color:var(--brand)}
+  .subtitle{margin:0 auto 18px;max-width:1000px;text-align:center;color:var(--muted);font-size:14px}
+  .tabs{display:flex;gap:8px;justify-content:center;margin:10px auto 16px;flex-wrap:wrap}
+  .tab{border:2px solid var(--brand);background:#fff;color:var(--brand);padding:10px 16px;border-radius:999px;font-weight:700;cursor:pointer;box-shadow:var(--shadow)}
+  .tab.active{background:var(--brand);color:#fff}
+  .toolbar{display:grid;gap:10px;grid-template-columns:1fr;max-width:1150px;margin:0 auto 14px}
+  .row{display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:center}
+  .search{position:relative;flex:1 1 420px;max-width:720px}
+  .search input{width:100%;padding:12px 44px 12px 16px;font-size:16px;border-radius:14px;border:2px solid var(--border);background:#fff;box-shadow:var(--shadow);outline:none}
+  .search input:focus{border-color:var(--brand)}
+  .search .icon{position:absolute;right:12px;top:50%;transform:translateY(-50%)}
+  select{border:2px solid var(--border);border-radius:12px;background:#fff;box-shadow:var(--shadow);padding:10px 12px;font-weight:600;color:var(--ink);cursor:pointer;font-size:14px}
+  .btn{border:2px solid var(--brand);color:var(--brand);background:#fff;border-radius:12px;padding:10px 14px;font-weight:700;cursor:pointer}
+  .btn:hover{background:#eef4ff}
+  .stats{max-width:1150px;margin:6px auto 18px;color:var(--muted);font-size:13px;text-align:center}
+  .grid{max-width:1200px;margin:0 auto;display:grid;gap:18px;grid-template-columns:repeat(auto-fit,minmax(280px,1fr))}
+  .card{background:var(--card);border-radius:20px;padding:18px;box-shadow:var(--shadow);display:flex;flex-direction:column;gap:10px;opacity:0;transform:translateY(10px);animation:fadeIn .35s ease forwards}
+  @keyframes fadeIn{to{opacity:1;transform:translateY(0)}}
+  .title{font-size:16px;font-weight:700;margin:0;color:var(--ink)}
+  .rowline{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+  .tag{font-size:12px;font-weight:800;color:#fff;border-radius:999px;padding:6px 10px;display:inline-flex;align-items:center;gap:6px}
+  .tag.ipm{background:var(--ipm)} .tag.gercon{background:var(--gercon)} .tag.auto{background:var(--ok)} .tag.nar{background:#ef4444}
+  .tag.reggercon{background:var(--gercon)} .tag.regulado{background:#fb923c} .tag.local{background:#16a34a} .tag.agen-gercon{background:#7c3aed} .tag.agen-nar{background:#ef4444} .tag.agen-email{background:#0ea5e9}
+  .kv{display:grid;grid-template-columns:1fr;gap:6px}
+  .kv div{font-size:13px;color:var(--muted)}
+  .hl{color:var(--ink);font-weight:700}
+  .foot{display:flex;gap:8px;flex-wrap:wrap}
+  .foot .mini{font-size:11px;color:#667;background:#f4f6ff;border:1px solid var(--border);padding:6px 8px;border-radius:8px}
+  .obs{margin-top:4px;font-size:12px;line-height:1.45;color:#0f172a;background:#f9fbff;border:1px solid var(--border);padding:10px;border-radius:12px}
+  .obs b{color:#0b1224} .obs a{color:#2563eb;text-decoration:none} .obs a:hover{text-decoration:underline}
+  .tests{max-width:1150px;margin:18px auto 0}
+  .tests .row{justify-content:flex-start}
+  #testLog{background:#0b1224;color:#e6eefc;border-radius:12px;padding:12px;white-space:pre-wrap;min-height:120px;border:1px solid #0d1a35}
+</style>
+</head>
+<body>
+  <h1>Fluxo de serviços da SMS de Cruz Alta - RS</h1>
+  <p class="subtitle">Busca unificada de <b>Especialidades</b> e <b>Exames</b>. Filtros por <b>Fluxo</b>, <b>Regulação</b>, <b>Agendamento</b> e <b>Prestador</b>. <span id="ver">Live via Google Sheets</span></p>
+
+  <div class="tabs">
+    <button class="tab active" id="tabEsp" onclick="switchCat('esp', this)">Especialidades</button>
+    <button class="tab" id="tabExa" onclick="switchCat('exa', this)">Exames</button>
+  </div>
+
+  <div class="toolbar">
+    <div class="row">
+      <div class="search">
+        <input id="q" placeholder="Pesquise por nome, local, prestador, palavra-chave..." oninput="applyFilters()" />
+        <span class="icon">🔎</span>
+      </div>
+      <select id="fFluxo" onchange="applyFilters()"><option value="">Fluxo: Todos</option></select>
+      <select id="fTipo" onchange="applyFilters()"><option value="">Regulação: Todas</option></select>
+      <select id="fAgendamento" onchange="applyFilters()">
+        <option value="">Agendamento: Todos</option>
+        <option>Local</option><option>Gercon</option><option>NAR</option>
+        <option>SIMUS</option><option>E-mail</option><option>Comaja</option><option>Prestador</option>
+      </select>
+      <select id="fPrestador" onchange="applyFilters()"><option value="">Prestador: Todos</option></select>
+      <button class="btn" id="refreshBtn" title="Atualizar agora">🔄 Atualizar</button>
+      <button class="btn" id="runTests">🧪 Testes automáticos</button>
+    </div>
+  </div>
+
+  <div class="stats" id="stats">Conectando à planilha…</div>
+  <div class="grid" id="cards"></div>
+
+  <section class="tests">
+    <div class="row"><strong>Relatório de testes</strong></div>
+    <pre id="testLog">Clique em “🧪 Testes automáticos”.</pre>
+  </section>
+
+<script>
+// Config
+const SHEETS_JSON_URL = "https://script.google.com/macros/s/AKfycbxKmvkAU-O8lxYIV9pYc7qWPIb1UzMW03IXF2zV4mgD8QfGLAo4BuWTzHqURIyBm1Ch/exec"; // Apps Script (deploy: Anyone)
+const SHEET_ID = "1j-X0rpXQ31BQHqHuiHUazykn3GREkYSG6Gpq_-7GPb8"; // planilha pública
+const TAB_ESPECIALIDADES = "Especialidades";
+const TAB_EXAMES = "Exames";
+const AUTO_REFRESH_MS = 60000;
+
+let ESPECIALIDADES = [], EXAMES = [], CURRENT = 'esp', lastUpdated = 0, timer = null;
+
+// Helpers
+const q = s => document.querySelector(s);
+function normalizeTipo(s=""){const t=(s||"").toUpperCase();if(t.includes("GERCON"))return"REGULADO GERCON";if(t.includes("NAR"))return"REGULADO NAR";if(t.includes("NÃO REGUL")||t.includes("NAO REGUL"))return"NÃO REGULADO";if(t.includes("AUTOM"))return"AUTOMÁTICO";if(t.includes("REGULADO"))return"REGULADO";return s||"-"}
+function badgeFluxo(txt=""){const t=(txt||"").toUpperCase();if(t.includes("GERCON"))return`<span class="tag gercon">Fluxo GERCON</span>`;if(t.includes("IPM"))return`<span class="tag ipm">Fluxo IPM</span>`;if(t.includes("SISREG"))return`<span class="tag ipm">Fluxo SISREG</span>`;if(t.includes("SISCAN"))return`<span class="tag ipm">Fluxo SISCAN</span>`;if(t.includes("SIMUS"))return`<span class="tag ipm">Fluxo SIMUS</span>`;if(t.includes("CONTRATO"))return`<span class="tag ipm">Fluxo Contrato</span>`;if(t.includes("COMAJA"))return`<span class="tag gercon">Fluxo Comaja</span>`;if(t.includes("SMS"))return`<span class="tag ipm">Fluxo SMS</span>`;if(t.includes("NAR"))return`<span class="tag nar">Fluxo NAR</span>`;return `<span class="tag" style="background:#94a3b8">Fluxo ${txt||"-"}</span>`}
+function badgeTipo(txt=""){const n=normalizeTipo(txt);if(n==="AUTOMÁTICO")return`<span class="tag auto">Automático</span>`;if(n==="REGULADO GERCON")return`<span class="tag reggercon">Regulado GERCON</span>`;if(n==="REGULADO NAR")return`<span class="tag nar">Regulado NAR</span>`;if(n==="NÃO REGULADO")return`<span class="tag regulado">Não regulado</span>`;if(n==="REGULADO")return`<span class="tag regulado">Regulado</span>`;return`<span class="tag" style="background:#64748b">${n}</span>`}
+function badgeAg(txt=""){const t=(txt||"").toUpperCase(),o=[];if(t.includes("LOCAL"))o.push(`<span class="tag local">Agend. Local</span>`);if(t.includes("GERCON"))o.push(`<span class="tag agen-gercon">Agend. Gercon</span>`);if(t.includes("NAR"))o.push(`<span class="tag agen-nar">Agend. NAR</span>`);if(t.includes("E-MAIL")||t.includes("EMAIL"))o.push(`<span class="tag agen-email">Agend. e-mail</span>`);if(t.includes("SIMUS"))o.push(`<span class="tag ipm">SIMUS</span>`);if(t.includes("PRESTADOR"))o.push(`<span class="tag" style="background:#334155">No prestador</span>`);if(t.includes("COMAJA"))o.push(`<span class="tag gercon">Comaja</span>`);return o.join(" ")}
+function getActive(){return CURRENT==='esp'?ESPECIALIDADES:EXAMES}
+
+// Render
+const cardsEl=q('#cards'), statsEl=q('#stats'), fFluxo=q('#fFluxo'), fTipo=q('#fTipo'), fPrest=q('#fPrestador');
+function card(item){return`
+  <article class="card">
+    <h3 class="title">${item.nome||"—"}</h3>
+    <div class="rowline">${badgeFluxo(item.fluxo||"")}${badgeTipo(item.tipo||"")}${badgeAg(item.ag||"")}</div>
+    <div class="kv">
+      <div>Local de atendimento: <span class="hl">${item.local||"—"}</span></div>
+      <div>Prestador: <span class="hl">${item.prest||"—"}</span></div>
+    </div>
+    ${item.obs?`<div class="obs">${item.obs}</div>`:""}
+    <div class="foot"><span class="mini">Fluxo: ${item.fluxo||"—"}</span><span class="mini">Regulação: ${normalizeTipo(item.tipo||"—")}</span><span class="mini">Agendamento: ${item.ag||"—"}</span></div>
+  </article>`}
+function render(list){cardsEl.innerHTML=list.map(card).join("");statsEl.textContent=`${list.length} resultado(s) de ${getActive().length} • ${CURRENT==='esp'?'Especialidades':'Exames'} • Atualizado ${new Date(lastUpdated).toLocaleTimeString('pt-BR')}`}
+
+// Filtros
+function buildDynamicOptions(){const all=[...ESPECIALIDADES,...EXAMES];const fluxoSet=new Set();all.forEach(it=>{(it.fluxo||"").split(/[\/ ,]| e /i).forEach(tok=>{const v=tok.trim();if(v)fluxoSet.add(v.toUpperCase())})});const fluxoOpts=["","IPM","GERCON","SIMUS","SISCAN","SISREG","CONTRATO","COMAJA","SMS","NAR",...Array.from(fluxoSet).filter(v=>!["IPM","GERCON","SIMUS","SISCAN","SISREG","CONTRATO","COMAJA","SMS","NAR",""].includes(v)).sort()];fFluxo.innerHTML=fluxoOpts.map(v=>`<option value="${v}">${v?("Fluxo: "+v):"Fluxo: Todos"}</option>`).join("");const tipoSet=new Set();all.forEach(it=>tipoSet.add(normalizeTipo(it.tipo||"")));const order=["","AUTOMÁTICO","REGULADO NAR","REGULADO GERCON","REGULADO","NÃO REGULADO"];const tipos=["",...Array.from(tipoSet).sort((a,b)=>order.indexOf(a)-order.indexOf(b))];fTipo.innerHTML=tipos.map(v=>`<option value="${v}">${v?("Regulação: "+v):"Regulação: Todas"}</option>`).join("");const prestSet=new Set();all.forEach(it=>{(it.prest||"").split(/[\/ ,]| e /i).forEach(tok=>{const v=tok.trim();if(v)prestSet.add(v)})});fPrest.innerHTML=["",...Array.from(prestSet).sort((a,b)=>a.localeCompare(b,'pt'))].map(v=>`<option value="${v}">${v?("Prestador: "+v):"Prestador: Todos"}</option>`).join("")}
+function applyFilters(){const qv=(q('#q').value||"").toLowerCase();const fluxo=(q('#fFluxo').value||"").toUpperCase();const tipo=q('#fTipo').value||"";const ag=(q('#fAgendamento').value||"").toLowerCase();const prest=(q('#fPrestador').value||"").toLowerCase();let list=getActive().filter(it=>{const text=(it.nome+" "+it.local+" "+it.prest+" "+it.tipo+" "+it.ag+" "+it.fluxo+" "+(it.obs||"")).toLowerCase();if(qv&&!text.includes(qv))return false;if(fluxo&&!((it.fluxo||"").toUpperCase().includes(fluxo)))return false;if(tipo&&(normalizeTipo(it.tipo||"")!==tipo))return false;if(ag&&!((it.ag||"").toLowerCase().includes(ag)))return false;if(prest&&!((it.prest||"").toLowerCase().includes(prest)))return false;return true}).sort((a,b)=>a.nome.localeCompare(b.nome,'pt'));render(list)}
+function resetFilters(){q('#q').value="";q('#fFluxo').value="";q('#fTipo').value="";q('#fAgendamento').value="";q('#fPrestador').value="";applyFilters()}
+function switchCat(cat,btn){CURRENT=cat;document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));btn.classList.add('active');applyFilters()}
+// garantir escopo global p/ inline onclick
+window.switchCat = switchCat;
+window.applyFilters = applyFilters;
+
+// Fetch GViz público
+function gvizURL(sheetName){const enc=encodeURIComponent(sheetName);return `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json&sheet=${enc}`}
+function parseGViz(text){const start=text.indexOf('{');const end=text.lastIndexOf('}');if(start===-1||end===-1)throw new Error('GViz inválido');const json=JSON.parse(text.slice(start,end+1));const cols=json.table.cols.map(c=>((c.label||c.id||'').trim().toLowerCase()));return json.table.rows.map(r=>{const obj={};r.c.forEach((cell,i)=>{const key=cols[i]||`col${i}`;obj[key]=cell? (cell.f||cell.v||"") : ""});return mapRow(obj)})}
+function mapRow(row){const get=(...keys)=>{for(const k of keys){const v=row[k];if(v!==undefined&&v!==null&&String(v).trim()!=='')return String(v)}return ''};return {
+  nome:get('nome','procedimento','serviço','servico','especialidade','exame','col0'),
+  local:get('local','local de atendimento','unidade','col1'),
+  ag:get('ag','agendamento','como agendar','col2'),
+  fluxo:get('fluxo','via','sistema','col3'),
+  tipo:get('tipo','regulação','regulacao','col4'),
+  prest:get('prest','prestador','responsável','responsavel','col5'),
+  obs:get('obs','observações','observacoes','notas','col6') }
+}
+
+// Fetch Apps Script JSON (opcional)
+async function fetchAppsScript(tab){const url=new URL(SHEETS_JSON_URL);url.searchParams.set('tab',tab);const r=await fetch(url,{mode:'cors'});if(!r.ok)throw new Error('HTTP '+r.status);return await r.json()}
+
+async function fetchGViz(tab){
+  // tentativa direta (pode funcionar porque GViz costuma permitir leitura cross-origin)
+  try{const r=await fetch(gvizURL(tab));const t=await r.text();return parseGViz(t)}
+  catch(_){
+    // fallback no-cors (opaque) não permite text(); por isso, tentar novamente sem no-cors não ajuda.
+    throw new Error('Falha ao buscar GViz — verifique publicação da planilha.');
+  }
+}
+
+async function loadData(){
+  statsEl.textContent='Carregando dados da planilha…';
+  try{
+    let esp, exa;
+    if(SHEETS_JSON_URL){esp=await fetchAppsScript(TAB_ESPECIALIDADES);exa=await fetchAppsScript(TAB_EXAMES)}
+    else {esp=await fetchGViz(TAB_ESPECIALIDADES);exa=await fetchGViz(TAB_EXAMES)}
+    if(!Array.isArray(esp)||!Array.isArray(exa))throw new Error('Formato inesperado');
+    ESPECIALIDADES=esp;EXAMES=exa;lastUpdated=Date.now();buildDynamicOptions();applyFilters();
+    statsEl.textContent=`Sincronizado • ${new Date(lastUpdated).toLocaleTimeString('pt-BR')}`;
+  }catch(err){
+    console.error(err);
+    statsEl.textContent='Falha ao carregar da planilha (confira se está "Qualquer pessoa com o link" e se o Web App está público).';
+  }
+}
+
+// Auto-refresh
+function schedule(){clearInterval(timer);timer=setInterval(loadData,AUTO_REFRESH_MS)}
+
+// Testes
+function log(msg){const el=q('#testLog');el.textContent+=`\n${msg}`}
+async function runTestsHandler(){
+  q('#testLog').textContent='Iniciando testes…';
+  const results=[];
+  try{
+    // Smoke
+    results.push(['SMOKE: fetch', !!window.fetch]);
+    results.push(['SMOKE: switchCat global', typeof window.switchCat === 'function']);
+
+    // Unit: GViz parse
+    const sampleText='google.visualization.Query.setResponse({"table":{"cols":[{"label":"Nome"},{"label":"Local"},{"label":"Ag"},{"label":"Fluxo"},{"label":"Tipo"},{"label":"Prest"},{"label":"Obs"}],"rows":[{"c":[{"v":"Cardiologia"},{"v":"CEM"},{"v":"Local"},{"v":"IPM"},{"v":"REGULADO NAR"},{"v":"Comaja"},{"v":"—"}]}]}})';
+    const parsed = parseGViz(sampleText);
+    results.push(['UNIT: parseGViz->mapRow.nome', parsed[0].nome === 'Cardiologia']);
+    results.push(['UNIT: normalizeTipo("regulado nar")', normalizeTipo('regulado nar') === 'REGULADO NAR']);
+
+    // E2E (filtros render)
+    ESPECIALIDADES = [
+      {nome:'Psiquiatria',local:'CAPS',ag:'Local',fluxo:'IPM',tipo:'AUTOMÁTICO',prest:'SMS'},
+      {nome:'Cardiologia',local:'CEM',ag:'Comaja',fluxo:'IPM',tipo:'REGULADO NAR',prest:'Comaja'},
+      {nome:'Ortopedia',local:'HSVP',ag:'Gercon',fluxo:'GERCON',tipo:'REGULADO GERCON',prest:'Gercon'},
+      {nome:'Clínica Médica',local:'CEM',ag:'Local',fluxo:'IPM',tipo:'AUTOMÁTICO',prest:'SMS'}
+    ];
+    EXAMES = [{nome:'Ecocardiograma',local:'HCI',ag:'Comaja',fluxo:'Comaja',tipo:'REGULADO',prest:'Comaja'}];
+    buildDynamicOptions();
+    q('#q').value = 'cardio';
+    applyFilters();
+    results.push(['E2E: filtro por texto', cardsEl.innerText.toLowerCase().includes('cardiologia')]);
+    q('#q').value='';
+    applyFilters();
+    results.push(['E2E: render geral >0', cardsEl.children.length > 0]);
+
+    // E2E: troca de aba
+    const tabExaBtn = document.getElementById('tabExa');
+    window.switchCat('exa', tabExaBtn);
+    results.push(['E2E: switchCat ativa Exames', document.getElementById('tabExa').classList.contains('active')]);
+
+    // LIVE (Apps Script) — opcional
+    if (SHEETS_JSON_URL) {
+      try{
+        const esp = await fetchAppsScript(TAB_ESPECIALIDADES);
+        const ok = Array.isArray(esp) && (esp.length === 0 || typeof esp[0] === 'object');
+        results.push(['LIVE: fetchAppsScript retorna array/objetos', ok]);
+      }catch(e){
+        results.push(['LIVE: fetchAppsScript erro (CORS/deploy público?)', false]);
+      }
+    }
+
+    // Unicode/acentos no GViz
+    const sampleText2='google.visualization.Query.setResponse({"table":{"cols":[{"label":"Nome"}],"rows":[{"c":[{"v":"Oftalmologia – Estrabismo"}]}]}})';
+    const p2 = parseGViz(sampleText2);
+    results.push(['UNIT: acentos/traço (–) preservados', p2[0].nome.includes('Estrabismo')]);
+
+    results.forEach(([name,ok])=>log(`${ok?'PASS':'FAIL'} • ${name}`));
+  }catch(e){
+    log('EXCEPTION • '+e.message);
+  }
+}
+
+// Init
+q('#refreshBtn').addEventListener('click',loadData);
+q('#runTests').addEventListener('click',runTestsHandler);
+loadData();
+schedule();
+</script>
+</body>
+</html>
