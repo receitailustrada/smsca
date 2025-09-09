@@ -1,4 +1,4 @@
-# smsca
+# sms.ca
 Secretaria Municipal de Saúde - CA
 # RXI • Cruz Alta – Especialidades e Exames (Live)
 
