@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>RXI • Validador CBO (Cruza com Tabela 1)</title>
+<style>
+:root{
+  --bg:#f6f8fb; --ink:#0f1733; --muted:#667085; --line:#e6e9ef;
+  --brand:#2953ff; --brand-2:#6c8bff; --ok:#12b886; --warn:#ef4444;
+  --card:#ffffff; --radius:16px; --shadow:0 10px 30px rgba(0,0,0,.08);
+  --border:#dfe3eb;
+}
+*{box-sizing:border-box}
+html,body{height:100%}
+body{
+  margin:0; font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial;
+  background:var(--bg); color:var(--ink);
+}
+.wrap{max-width:1100px; margin:24px auto; padding:16px}
+.header{
+  background:linear-gradient(135deg,var(--brand),var(--brand-2));
+  color:#fff; border-radius:20px; padding:18px 20px; box-shadow:var(--shadow);
+}
+.header h1{margin:0 0 6px; font-size:22px; font-weight:800; letter-spacing:.3px}
+.header p{margin:0; opacity:.92}
+.card{
+  background:var(--card); border:1px solid var(--border);
+  border-radius:var(--radius); box-shadow:var(--shadow); padding:16px; margin-top:16px;
+}
+h2{font-size:16px; margin:0 0 12px}
+label{font-weight:600; font-size:14px; display:block; margin:10px 0 6px}
+textarea{
+  width:100%; min-height:140px; border:1px solid var(--line);
+  border-radius:12px; padding:12px; font-family:JetBrains Mono, ui-monospace, monospace; font-size:13px
+}
+select, input[type="text"]{
+  border:1px solid var(--line); border-radius:12px; padding:10px 12px; font-size:14px
+}
+.row{display:flex; gap:12px; flex-wrap:wrap; align-items:center; margin:10px 0}
+button{
+  border:0; background:var(--brand); color:#fff; padding:10px 14px; border-radius:12px;
+  cursor:pointer; font-weight:800; letter-spacing:.3px
+}
+button.ghost{background:#fff; color:var(--brand); border:1px solid var(--brand)}
+.pill{
+  display:inline-block; padding:6px 10px; border-radius:999px; border:1px solid var(--line);
+  margin:3px 3px 0 0; font-size:12px
+}
+.ok{border-color:#c6f0df; background:#effbf6}
+.warn{border-color:#ffd6d6; background:#fff1f1}
+.copy{font-size:12px; padding:6px 10px}
+.results{
+  max-height:360px; overflow:auto; border:1px dashed var(--line);
+  border-radius:12px; padding:10px; background:#fafbff
+}
+code{font-family:JetBrains Mono, ui-monospace, monospace; font-size:12px}
+.footer{text-align:center; color:var(--muted); font-size:12px; margin-top:8px}
+.badge{
+  display:inline-flex; align-items:center; gap:8px; font-weight:700;
+  background:#fff; color:var(--brand); border:1px solid rgba(255,255,255,.6);
+  padding:8px 12px; border-radius:999px; box-shadow:0 10px 18px rgba(0,0,0,.07); margin-top:10px
+}
+.logoR{display:inline-block; width:24px; height:24px; border-radius:6px; background:#fff; color:var(--brand);
+  font-weight:900; text-align:center; line-height:24px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="header">
+    <h1>RXI • Validador CBO</h1>
+    <p>Cruza códigos com a <strong>Tabela 1</strong> (Ficha de cadastro individual) e permite filtrar por outras fichas <em>pré-filtradas</em> com base na Tabela 1.</p>
+    <div class="badge"><span class="logoR">R</span> Receita Ilustrada — Cruz Alta</div>
+  </div>
+
+  <div class="card">
+    <h2>Entrada</h2>
+    <label for="ficha">Filtro por ficha (opcional)</label>
+    <div class="row">
+      <select id="ficha">
+        <option value="">(Sem filtro de ficha)</option>
+        <option value="ficha_cadastro_individual">ficha_cadastro_individual</option><option value="ficha_cadastro_domiciliar_territorial">ficha_cadastro_domiciliar_territorial</option><option value="ficha_atendimento_individual">ficha_atendimento_individual</option><option value="ficha_atendimento_odontologico_individual">ficha_atendimento_odontologico_individual</option><option value="ficha_atividade_coletiva">ficha_atividade_coletiva</option><option value="ficha_procedimentos">ficha_procedimentos</option><option value="ficha_visita_domiciliar_territorial">ficha_visita_domiciliar_territorial</option><option value="marcadores_consumo_alimentar">marcadores_consumo_alimentar</option><option value="ficha_avaliacao_elegibilidade">ficha_avaliacao_elegibilidade</option><option value="ficha_atendimento_domiciliar">ficha_atendimento_domiciliar</option><option value="ficha_complementar_zika_microcefalia">ficha_complementar_zika_microcefalia</option><option value="ficha_vacinacao">ficha_vacinacao</option>
+      </select>
+      <input id="busca" type="text" placeholder="Busca por nome (opcional)">
+      <button id="btnValidar">Validar & Filtrar</button>
+      <button id="btnLimpar" class="ghost">Limpar</button>
+    </div>
+    <label for="entrada">Cole sua lista (uma por linha — o código pode vir misturado ao texto):</label>
+    <textarea id="entrada" placeholder="Ex.:&#10;223505 ENFERMEIRO&#10;225130 MÉDICO DE FAMÍLIA E COMUNIDADE&#10;..."></textarea>
+  </div>
+
+  <div class="card">
+    <h2>Resultado</h2>
+    <div class="row">
+      <button id="btnCopiar" class="copy">Copiar resultado</button>
+    </div>
+    <div class="results" id="saida"></div>
+    <div class="footer">Base RXI • 2025 — Somente CBOs que constam na Tabela 1 serão marcados como <em>OK</em>.</div>
+  </div>
+</div>
+
+<script>
+// -------------------- Dados --------------------
+const DATA = {"ficha_cadastro_individual": [{"codigo": "515105", "nome": "AGENTE COMUNITÁRIO DE SAÚDE"}, {"codigo": "515310", "nome": "AGENTE DE AÇÃO SOCIAL"}, {"codigo": "515140", "nome": "AGENTE DE COMBATE ÀS ENDEMIAS"}, {"codigo": "251605", "nome": "ASSISTENTE SOCIAL"}, {"codigo": "322230", "nome": "AUXILIAR DE ENFERMAGEM"}, {"codigo": "322250", "nome": "AUXILIAR DE ENFERMAGEM DA ESTRATEGIA DE SAUDE DA FAMILIA"}, {"codigo": "322415", "nome": "AUXILIAR EM SAÚDE BUCAL"}, {"codigo": "322430", "nome": "AUXILIAR EM SAÚDE BUCAL DA ESTRATÉGIA DE SAÚDE DA FAMÍLIA"}, {"codigo": "223208", "nome": "CIRURGIÃO DENTISTA - CLÍNICO GERAL"}, {"codigo": "223293", "nome": "CIRURGIÃO-DENTISTA DA ESTRATÉGIA DE SAÚDE DA FAMÍLIA"}, {"codigo": "223505", "nome": "ENFERMEIRO"}, {"codigo": "223565", "nome": "ENFERMEIRO DA ESTRATÉGIA DE SAÚDE DA FAMÍLIA"}, {"codigo": "223545", "nome": "ENFERMEIRO OBSTÉTRICO"}, {"codigo": "223555", "nome": "ENFERMEIRO PUERICULTOR E PEDIÁTRICO"}, {"codigo": "225125", "nome": "MÉDICO CLÍNICO"}, {"codigo": "225142", "nome": "MÉDICO DA ESTRATÉGIA DE SAÚDE DA FAMÍLIA"}, {"codigo": "225130", "nome": "MÉDICO DE FAMÍLIA E COMUNIDADE"}, {"codigo": "225170", "nome": "MÉDICO GENERALISTA"}, {"codigo": "223710", "nome": "NUTRICIONISTA"}, {"codigo": "251510", "nome": "PSICÓLOGO CLÍNICO"}, {"codigo": "251505", "nome": "PSICÓLOGO EDUCACIONAL"}, {"codigo": "251530", "nome": "PSICÓLOGO SOCIAL"}, {"codigo": "422110", "nome": "RECEPCIONISTA DE CONSULTÓRIO MÉDICO OU DENTÁRIO"}, {"codigo": "422105", "nome": "RECEPCIONISTA, EM GERAL"}, {"codigo": "322205", "nome": "TECNICO DE ENFERMAGEM"}, {"codigo": "322245", "nome": "TECNICO DE ENFERMAGEM DA ESTRATEGIA DE SAUDE DA FAMILIA"}, {"codigo": "322210", "nome": "TECNICO DE ENFERMAGEM DE TERAPIA INTENSIVA"}, {"codigo": "322255", "nome": "TÉCNICO EM AGENTE COMUNITÁRIO DE SAÚDE"}, {"codigo": "322405", "nome": "TECNICO EM SAUDE BUCAL"}, {"codigo": "322425", "nome": "TÉCNICO EM SAÚDE BUCAL DA ESTRATÉGIA DE SAÚDE DA FAMÍLIA"}, {"codigo": "223905", "nome": "TERAPEUTA OCUPACIONAL"}], "ficha_cadastro_domiciliar_territorial": [{"codigo": "515105", "nome": "AGENTE COMUNITÁRIO DE SAÚDE"}, {"codigo": "515310", "nome": "AGENTE DE AÇÃO SOCIAL"}, {"codigo": "515140", "nome": "AGENTE DE COMBATE ÀS ENDEMIAS"}, {"codigo": "251605", "nome": "ASSISTENTE SOCIAL"}, {"codigo": "322230", "nome": "AUXILIAR DE ENFERMAGEM"}, {"codigo": "322250", "nome": "AUXILIAR DE ENFERMAGEM DA ESTRATEGIA DE SAUDE DA FAMILIA"}, {"codigo": "322415", "nome": "AUXILIAR EM SAÚDE BUCAL"}, {"codigo": "322430", "nome": "AUXILIAR EM SAÚDE BUCAL DA ESTRATÉGIA DE SAÚDE DA FAMÍLIA"}, {"codigo": "223208", "nome": "CIRURGIÃO DENTISTA - CLÍNICO GERAL"}, {"codigo": "223293", "nome": "CIRURGIÃO-DENTISTA DA ESTRATÉGIA DE SAÚDE DA FAMÍLIA"}, {"codigo": "223505", "nome": "ENFERMEIRO"}, {"codigo": "223565", "nome": "ENFERMEIRO DA ESTRATÉGIA DE SAÚDE DA FAMÍLIA"}, {"codigo": "223545", "nome": "ENFERMEIRO OBSTÉTRICO"}, {"codigo": "223555", "nome": "ENFERMEIRO PUERICULTOR E PEDIÁTRICO"}, {"codigo": "225125", "nome": "MÉDICO CLÍNICO"}, {"codigo": "225142", "nome": "MÉDICO DA ESTRATÉGIA DE SAÚDE DA FAMÍLIA"}, {"codigo": "225130", "nome": "MÉDICO DE FAMÍLIA E COMUNIDADE"}, {"codigo": "225170", "nome": "MÉDICO GENERALISTA"}, {"codigo": "223710", "nome": "NUTRICIONISTA"}, {"codigo": "251510", "nome": "PSICÓLOGO CLÍNICO"}, {"codigo": "251505", "nome": "PSICÓLOGO EDUCACIONAL"}, {"codigo": "251530", "nome": "PSICÓLOGO SOCIAL"}, {"codigo": "422110", "nome": "RECEPCIONISTA DE CONSULTÓRIO MÉDICO OU DENTÁRIO"}, {"codigo": "422105", "nome": "RECEPCIONISTA, EM GERAL"}, {"codigo": "322205", "nome": "TECNICO DE ENFERMAGEM"}, {"codigo": "322245", "nome": "TECNICO DE ENFERMAGEM DA ESTRATEGIA DE SAUDE DA FAMILIA"}, {"codigo": "322210", "nome": "TECNICO DE ENFERMAGEM DE TERAPIA INTENSIVA"}, {"codigo": "322255", "nome": "TÉCNICO EM AGENTE COMUNITÁRIO DE SAÚDE"}, {"codigo": "322405", "nome": "TECNICO EM SAUDE BUCAL"}, {"codigo": "322425", "nome": "TÉCNICO EM SAÚDE BUCAL DA ESTRATÉGIA DE SAÚDE DA FAMÍLIA"}, {"codigo": "223905", "nome": "TERAPEUTA OCUPACIONAL"}], "ficha_atendimento_individual": [{"codigo": "251605", "nome": "ASSISTENTE SOCIAL", "habilitadoCID10": "NÃO"}, {"codigo": "223505", "nome": "ENFERMEIRO", "habilitadoCID10": "NÃO"}, {"codigo": "223565", "nome": "ENFERMEIRO DA ESTRATÉGIA DE SAÚDE DA FAMÍLIA", "habilitadoCID10": "NÃO"}, {"codigo": "223545", "nome": "ENFERMEIRO OBSTÉTRICO", "habilitadoCID10": "NÃO"}, {"codigo": "223555", "nome": "ENFERMEIRO PUERICULTOR E PEDIÁTRICO", "habilitadoCID10": "NÃO"}, {"codigo": "225125", "nome": "MÉDICO CLÍNICO", "habilitadoCID10": "SIM"}, {"codigo": "225142", "nome": "MÉDICO DA ESTRATÉGIA DE SAÚDE DA FAMÍLIA", "habilitadoCID10": "SIM"}, {"codigo": "225130", "nome": "MÉDICO DE FAMÍLIA E COMUNIDADE", "habilitadoCID10": "SIM"}, {"codigo": "225170", "nome": "MÉDICO GENERALISTA", "habilitadoCID10": "SIM"}, {"codigo": "223710", "nome": "NUTRICIONISTA", "habilitadoCID10": "NÃO"}, {"codigo": "251510", "nome": "PSICÓLOGO CLÍNICO", "habilitadoCID10": "SIM"}, {"codigo": "251505", "nome": "PSICÓLOGO EDUCACIONAL", "habilitadoCID10": "SIM"}, {"codigo": "251530", "nome": "PSICÓLOGO SOCIAL", "habilitadoCID10": "SIM"}, {"codigo": "223905", "nome": "TERAPEUTA OCUPACIONAL", "habilitadoCID10": "NÃO"}], "ficha_atendimento_odontologico_individual": [{"codigo": "322415", "nome": "AUXILIAR EM SAÚDE BUCAL"}, {"codigo": "322430", "nome": "AUXILIAR EM SAÚDE BUCAL DA ESTRATÉGIA DE SAÚDE DA FAMÍLIA"}, {"codigo": "223208", "nome": "CIRURGIÃO DENTISTA - CLÍNICO GERAL"}, {"codigo": "223293", "nome": "CIRURGIÃO-DENTISTA DA ESTRATÉGIA DE SAÚDE DA FAMÍLIA"}, {"codigo": "322405", "nome": "TÉCNICO EM SAÚDE BUCAL"}, {"codigo": "322425", "nome": "TÉCNICO EM SAÚDE BUCAL DA ESTRATÉGIA DE SAÚDE DA FAMÍLIA"}], "ficha_atividade_coletiva": [{"codigo": "515105", "nome": "AGENTE COMUNITÁRIO DE SAÚDE"}, {"codigo": "515310", "nome": "AGENTE DE AÇÃO SOCIAL"}, {"codigo": "515140", "nome": "AGENTE DE COMBATE ÀS ENDEMIAS"}, {"codigo": "251605", "nome": "ASSISTENTE SOCIAL"}, {"codigo": "322230", "nome": "AUXILIAR DE ENFERMAGEM"}, {"codigo": "322250", "nome": "AUXILIAR DE ENFERMAGEM DA ESTRATEGIA DE SAUDE DA FAMILIA"}, {"codigo": "322415", "nome": "AUXILIAR EM SAÚDE BUCAL"}, {"codigo": "322430", "nome": "AUXILIAR EM SAÚDE BUCAL DA ESTRATÉGIA DE SAÚDE DA FAMÍLIA"}, {"codigo": "223208", "nome": "CIRURGIÃO DENTISTA - CLÍNICO GERAL"}, {"codigo": "223293", "nome": "CIRURGIÃO-DENTISTA DA ESTRATÉGIA DE SAÚDE DA FAMÍLIA"}, {"codigo": "223505", "nome": "ENFERMEIRO"}, {"codigo": "223565", "nome": "ENFERMEIRO DA ESTRATÉGIA DE SAÚDE DA FAMÍLIA"}, {"codigo": "223545", "nome": "ENFERMEIRO OBSTÉTRICO"}, {"codigo": "223555", "nome": "ENFERMEIRO PUERICULTOR E PEDIÁTRICO"}, {"codigo": "225125", "nome": "MÉDICO CLÍNICO"}, {"codigo": "225142", "nome": "MÉDICO DA ESTRATÉGIA DE SAÚDE DA FAMÍLIA"}, {"codigo": "225130", "nome": "MÉDICO DE FAMÍLIA E COMUNIDADE"}, {"codigo": "225170", "nome": "MÉDICO GENERALISTA"}, {"codigo": "223710", "nome": "NUTRICIONISTA"}, {"codigo": "422110", "nome": "RECEPCIONISTA DE CONSULTÓRIO MÉDICO OU DENTÁRIO"}, {"codigo": "422105", "nome": "RECEPCIONISTA, EM GERAL"}, {"codigo": "322205", "nome": "TECNICO DE ENFERMAGEM"}, {"codigo": "322245", "nome": "TECNICO DE ENFERMAGEM DA ESTRATEGIA DE SAUDE DA FAMILIA"}, {"codigo": "322210", "nome": "TECNICO DE ENFERMAGEM DE TERAPIA INTENSIVA"}, {"codigo": "322255", "nome": "TÉCNICO EM AGENTE COMUNITÁRIO DE SAÚDE"}, {"codigo": "322405", "nome": "TECNICO EM SAUDE BUCAL"}, {"codigo": "322425", "nome": "TÉCNICO EM SAÚDE BUCAL DA ESTRATÉGIA DE SAÚDE DA FAMÍLIA"}, {"codigo": "223905", "nome": "TERAPEUTA OCUPACIONAL"}], "ficha_procedimentos": [{"codigo": "515105", "nome": "AGENTE COMUNITÁRIO DE SAÚDE"}, {"codigo": "515310", "nome": "AGENTE DE AÇÃO SOCIAL"}, {"codigo": "251605", "nome": "ASSISTENTE SOCIAL"}, {"codigo": "322230", "nome": "AUXILIAR DE ENFERMAGEM"}, {"codigo": "322250", "nome": "AUXILIAR DE ENFERMAGEM DA ESTRATEGIA DE SAUDE DA FAMILIA"}, {"codigo": "223505", "nome": "ENFERMEIRO"}, {"codigo": "223565", "nome": "ENFERMEIRO DA ESTRATÉGIA DE SAÚDE DA FAMÍLIA"}, {"codigo": "223545", "nome": "ENFERMEIRO OBSTÉTRICO"}, {"codigo": "223555", "nome": "ENFERMEIRO PUERICULTOR E PEDIÁTRICO"}, {"codigo": "225125", "nome": "MÉDICO CLÍNICO"}, {"codigo": "225142", "nome": "MÉDICO DA ESTRATÉGIA DE SAÚDE DA FAMÍLIA"}, {"codigo": "225130", "nome": "MÉDICO DE FAMÍLIA E COMUNIDADE"}, {"codigo": "225170", "nome": "MÉDICO GENERALISTA"}, {"codigo": "223710", "nome": "NUTRICIONISTA"}, {"codigo": "251510", "nome": "PSICÓLOGO CLÍNICO"}, {"codigo": "251505", "nome": "PSICÓLOGO EDUCACIONAL"}, {"codigo": "251530", "nome": "PSICÓLOGO SOCIAL"}, {"codigo": "322205", "nome": "TECNICO DE ENFERMAGEM"}, {"codigo": "322245", "nome": "TECNICO DE ENFERMAGEM DA ESTRATEGIA DE SAUDE DA FAMILIA"}, {"codigo": "322210", "nome": "TECNICO DE ENFERMAGEM DE TERAPIA INTENSIVA"}, {"codigo": "322255", "nome": "TÉCNICO EM AGENTE COMUNITÁRIO DE SAÚDE"}, {"codigo": "223905", "nome": "TERAPEUTA OCUPACIONAL"}], "ficha_visita_domiciliar_territorial": [{"codigo": "515105", "nome": "AGENTE COMUNITÁRIO DE SAÚDE"}, {"codigo": "515310", "nome": "AGENTE DE AÇÃO SOCIAL"}, {"codigo": "515140", "nome": "AGENTE DE COMBATE ÀS ENDEMIAS"}, {"codigo": "322255", "nome": "TÉCNICO EM AGENTE COMUNITÁRIO DE SAÚDE"}], "marcadores_consumo_alimentar": [{"codigo": "515105", "nome": "AGENTE COMUNITÁRIO DE SAÚDE"}, {"codigo": "515310", "nome": "AGENTE DE AÇÃO SOCIAL"}, {"codigo": "515140", "nome": "AGENTE DE COMBATE ÀS ENDEMIAS"}, {"codigo": "251605", "nome": "ASSISTENTE SOCIAL"}, {"codigo": "322230", "nome": "AUXILIAR DE ENFERMAGEM"}, {"codigo": "322250", "nome": "AUXILIAR DE ENFERMAGEM DA ESTRATEGIA DE SAUDE DA FAMILIA"}, {"codigo": "322415", "nome": "AUXILIAR EM SAÚDE BUCAL"}, {"codigo": "322430", "nome": "AUXILIAR EM SAÚDE BUCAL DA ESTRATÉGIA DE SAÚDE DA FAMÍLIA"}, {"codigo": "223208", "nome": "CIRURGIÃO DENTISTA - CLÍNICO GERAL"}, {"codigo": "223293", "nome": "CIRURGIÃO-DENTISTA DA ESTRATÉGIA DE SAÚDE DA FAMÍLIA"}, {"codigo": "223505", "nome": "ENFERMEIRO"}, {"codigo": "223565", "nome": "ENFERMEIRO DA ESTRATÉGIA DE SAÚDE DA FAMÍLIA"}, {"codigo": "223545", "nome": "ENFERMEIRO OBSTÉTRICO"}, {"codigo": "223555", "nome": "ENFERMEIRO PUERICULTOR E PEDIÁTRICO"}, {"codigo": "225125", "nome": "MÉDICO CLÍNICO"}, {"codigo": "225142", "nome": "MÉDICO DA ESTRATÉGIA DE SAÚDE DA FAMÍLIA"}, {"codigo": "225130", "nome": "MÉDICO DE FAMÍLIA E COMUNIDADE"}, {"codigo": "225170", "nome": "MÉDICO GENERALISTA"}, {"codigo": "223710", "nome": "NUTRICIONISTA"}, {"codigo": "251510", "nome": "PSICÓLOGO CLÍNICO"}, {"codigo": "251505", "nome": "PSICÓLOGO EDUCACIONAL"}, {"codigo": "251530", "nome": "PSICÓLOGO SOCIAL"}, {"codigo": "322205", "nome": "TECNICO DE ENFERMAGEM"}, {"codigo": "322245", "nome": "TECNICO DE ENFERMAGEM DA ESTRATEGIA DE SAUDE DA FAMILIA"}, {"codigo": "322210", "nome": "TECNICO DE ENFERMAGEM DE TERAPIA INTENSIVA"}, {"codigo": "322255", "nome": "TÉCNICO EM AGENTE COMUNITÁRIO DE SAÚDE"}, {"codigo": "322405", "nome": "TECNICO EM SAUDE BUCAL"}, {"codigo": "322425", "nome": "TÉCNICO EM SAÚDE BUCAL DA ESTRATÉGIA DE SAÚDE DA FAMÍLIA"}, {"codigo": "223905", "nome": "TERAPEUTA OCUPACIONAL"}], "ficha_avaliacao_elegibilidade": [{"codigo": "251605", "nome": "ASSISTENTE SOCIAL"}, {"codigo": "223505", "nome": "ENFERMEIRO"}, {"codigo": "223565", "nome": "ENFERMEIRO DA ESTRATEGIA DE SAUDE DA FAMILIA"}, {"codigo": "223545", "nome": "ENFERMEIRO OBSTETRICO"}, {"codigo": "223555", "nome": "ENFERMEIRO PUERICULTOR E PEDIATRICO"}, {"codigo": "225125", "nome": "MEDICO CLINICO"}, {"codigo": "225142", "nome": "MEDICO DA ESTRATEGIA DE SAUDE DA FAMILIA"}, {"codigo": "225130", "nome": "MEDICO DE FAMILIA E COMUNIDADE"}, {"codigo": "225170", "nome": "MEDICO GENERALISTA"}], "ficha_atendimento_domiciliar": [{"codigo": "251605", "nome": "ASSISTENTE SOCIAL"}, {"codigo": "322230", "nome": "AUXILIAR DE ENFERMAGEM"}, {"codigo": "322250", "nome": "AUXILIAR DE ENFERMAGEM DA ESTRATEGIA DE SAUDE DA FAMILIA"}, {"codigo": "223208", "nome": "CIRURGIAO DENTISTA CLINICO GERAL"}, {"codigo": "223293", "nome": "CIRURGIAO DENTISTA DA ESTRATEGIA DE SAUDE DA FAMILIA"}, {"codigo": "223505", "nome": "ENFERMEIRO"}, {"codigo": "223565", "nome": "ENFERMEIRO DA ESTRATEGIA DE SAUDE DA FAMILIA"}, {"codigo": "223545", "nome": "ENFERMEIRO OBSTETRICO"}, {"codigo": "223555", "nome": "ENFERMEIRO PUERICULTOR E PEDIATRICO"}, {"codigo": "225125", "nome": "MEDICO CLINICO"}, {"codigo": "225142", "nome": "MEDICO DA ESTRATEGIA DE SAUDE DA FAMILIA"}, {"codigo": "225130", "nome": "MEDICO DE FAMILIA E COMUNIDADE"}, {"codigo": "225170", "nome": "MEDICO GENERALISTA"}, {"codigo": "223710", "nome": "NUTRICIONISTA"}, {"codigo": "251510", "nome": "PSICOLOGO CLINICO"}, {"codigo": "251505", "nome": "PSICOLOGO EDUCACIONAL"}, {"codigo": "251530", "nome": "PSICOLOGO SOCIAL"}, {"codigo": "322205", "nome": "TECNICO DE ENFERMAGEM"}, {"codigo": "322245", "nome": "TECNICO DE ENFERMAGEM DA ESTRATEGIA DE SAUDE DA FAMILIA"}, {"codigo": "322210", "nome": "TECNICO DE ENFERMAGEM DE TERAPIA INTENSIVA"}, {"codigo": "322405", "nome": "TECNICO EM SAUDE BUCAL"}, {"codigo": "322425", "nome": "TECNICO EM SAUDE BUCAL DA ESTRATEGIA DE SAUDE DA FAMILIA"}, {"codigo": "223905", "nome": "TERAPEUTA OCUPACIONAL"}], "ficha_complementar_zika_microcefalia": [{"codigo": "251605", "nome": "ASSISTENTE SOCIAL"}, {"codigo": "223505", "nome": "ENFERMEIRO"}, {"codigo": "223565", "nome": "ENFERMEIRO DA ESTRATÉGIA DE SAÚDE DA FAMÍLIA"}, {"codigo": "223545", "nome": "ENFERMEIRO OBSTÉTRICO"}, {"codigo": "223555", "nome": "ENFERMEIRO PUERICULTOR E PEDIÁTRICO"}, {"codigo": "225125", "nome": "MÉDICO CLÍNICO"}, {"codigo": "225142", "nome": "MÉDICO DA ESTRATÉGIA DE SAÚDE DA FAMÍLIA"}, {"codigo": "225130", "nome": "MÉDICO DE FAMÍLIA E COMUNIDADE"}, {"codigo": "225170", "nome": "MÉDICO GENERALISTA"}, {"codigo": "223710", "nome": "NUTRICIONISTA"}, {"codigo": "251510", "nome": "PSICÓLOGO CLÍNICO"}, {"codigo": "251505", "nome": "PSICÓLOGO EDUCACIONAL"}, {"codigo": "251530", "nome": "PSICÓLOGO SOCIAL"}, {"codigo": "223905", "nome": "TERAPEUTA OCUPACIONAL"}], "ficha_vacinacao": [{"codigo": "322230", "nome": "AUXILIAR DE ENFERMAGEM"}, {"codigo": "322250", "nome": "AUXILIAR DE ENFERMAGEM DA ESTRATÉGIA DE SAÚDE DA FAMÍLIA"}, {"codigo": "223505", "nome": "ENFERMEIRO"}, {"codigo": "223565", "nome": "ENFERMEIRO DA ESTRATÉGIA DE SAÚDE DA FAMÍLIA"}, {"codigo": "223545", "nome": "ENFERMEIRO OBSTÉTRICO"}, {"codigo": "223555", "nome": "ENFERMEIRO PUERICULTOR E PEDIÁTRICO"}, {"codigo": "225125", "nome": "MÉDICO CLÍNICO"}, {"codigo": "225142", "nome": "MÉDICO DA ESTRATÉGIA DE SAÚDE DA FAMÍLIA"}, {"codigo": "225130", "nome": "MÉDICO DE FAMÍLIA E COMUNIDADE"}, {"codigo": "225170", "nome": "MÉDICO GENERALISTA"}, {"codigo": "322205", "nome": "TÉCNICO DE ENFERMAGEM"}, {"codigo": "322245", "nome": "TÉCNICO DE ENFERMAGEM DA ESTRATÉGIA DE SAÚDE DA FAMÍLIA"}, {"codigo": "322210", "nome": "TÉCNICO DE ENFERMAGEM DE TERAPIA INTENSIVA"}]};
+const TABELA1 = new Map({"515105": "AGENTE COMUNITÁRIO DE SAÚDE", "515310": "AGENTE DE AÇÃO SOCIAL", "515140": "AGENTE DE COMBATE ÀS ENDEMIAS", "251605": "ASSISTENTE SOCIAL", "322230": "AUXILIAR DE ENFERMAGEM", "322250": "AUXILIAR DE ENFERMAGEM DA ESTRATEGIA DE SAUDE DA FAMILIA", "322415": "AUXILIAR EM SAÚDE BUCAL", "322430": "AUXILIAR EM SAÚDE BUCAL DA ESTRATÉGIA DE SAÚDE DA FAMÍLIA", "223208": "CIRURGIÃO DENTISTA - CLÍNICO GERAL", "223293": "CIRURGIÃO-DENTISTA DA ESTRATÉGIA DE SAÚDE DA FAMÍLIA", "223505": "ENFERMEIRO", "223565": "ENFERMEIRO DA ESTRATÉGIA DE SAÚDE DA FAMÍLIA", "223545": "ENFERMEIRO OBSTÉTRICO", "223555": "ENFERMEIRO PUERICULTOR E PEDIÁTRICO", "225125": "MÉDICO CLÍNICO", "225142": "MÉDICO DA ESTRATÉGIA DE SAÚDE DA FAMÍLIA", "225130": "MÉDICO DE FAMÍLIA E COMUNIDADE", "225170": "MÉDICO GENERALISTA", "223710": "NUTRICIONISTA", "251510": "PSICÓLOGO CLÍNICO", "251505": "PSICÓLOGO EDUCACIONAL", "251530": "PSICÓLOGO SOCIAL", "422110": "RECEPCIONISTA DE CONSULTÓRIO MÉDICO OU DENTÁRIO", "422105": "RECEPCIONISTA, EM GERAL", "322205": "TECNICO DE ENFERMAGEM", "322245": "TECNICO DE ENFERMAGEM DA ESTRATEGIA DE SAUDE DA FAMILIA", "322210": "TECNICO DE ENFERMAGEM DE TERAPIA INTENSIVA", "322255": "TÉCNICO EM AGENTE COMUNITÁRIO DE SAÚDE", "322405": "TECNICO EM SAUDE BUCAL", "322425": "TÉCNICO EM SAÚDE BUCAL DA ESTRATÉGIA DE SAÚDE DA FAMÍLIA", "223905": "TERAPEUTA OCUPACIONAL"});
+
+// -------------------- Util --------------------
+function parseLinhas(txt){
+  const linhas = txt.split(/\r?\n/).map(s=>s.trim()).filter(Boolean);
+  return linhas.map(l=>{
+    const m = l.match(/([A-Z0-9]{5,6})/i); // 5-6 chars/dígitos (suporta códigos com letra)
+    const codigo = m ? m[1].toUpperCase() : "";
+    return { linha:l, codigo };
+  });
+}
+
+function normalizaItem(it){
+  return { codigo: String(it.codigo).toUpperCase(), nome: it.nome, habilitadoCID10: it.habilitadoCID10 || "" };
+}
+
+function filtraPorFicha(chaveFicha){
+  if(!chaveFicha) return null;
+  const arr = DATA[chaveFicha] || [];
+  const m = new Map(arr.map(x=>[String(x.codigo).toUpperCase(), normalizaItem(x)]));
+  return m;
+}
+
+function buscaNomeOk(nome, termo){
+  if(!termo) return true;
+  const n = (nome||"").toLowerCase();
+  const t = termo.toLowerCase();
+  return n.includes(t);
+}
+
+// -------------------- UI --------------------
+const $ = sel => document.querySelector(sel);
+const entrada = $("#entrada");
+const ficha = $("#ficha");
+const saida = $("#saida");
+const busca = $("#busca");
+const btnValidar = $("#btnValidar");
+const btnLimpar = $("#btnLimpar");
+const btnCopiar = $("#btnCopiar");
+
+function render(items){
+  if(!items.length){ saida.innerHTML = "<p class='pill warn'>Sem resultados</p>"; return; }
+  const linhas = items.map(it=>{
+    const cid = it.habilitadoCID10 ? ` • CID10: <strong>${it.habilitadoCID10}</strong>` : "";
+    const tagClass = TABELA1.has(it.codigo) ? "ok" : "warn";
+    return `<span class="pill ${tagClass}"><code>${it.codigo}</code> — ${it.nome}${cid}</span>`;
+  });
+  saida.innerHTML = linhas.join("<br>");
+}
+
+function validar(){
+  const parsed = parseLinhas(entrada.value);
+  const filtro = filtraPorFicha(ficha.value);
+  const termo = busca.value.trim();
+  let out = [];
+  if(parsed.length){
+    const setEntrada = new Set(parsed.map(x=>x.codigo).filter(Boolean));
+    if(filtro){
+      let candidatos = [];
+      for(const [codigo, it] of filtro){
+        if(setEntrada.has(codigo) && TABELA1.has(codigo) && buscaNomeOk(it.nome, termo)){ candidatos.push(it); }
+      }
+      return render(candidatos);
+    } else {
+      for(const codigo of setEntrada){
+        if(TABELA1.has(codigo)){
+          const nome = TABELA1.get(codigo);
+          if(buscaNomeOk(nome, termo)) out.push({codigo, nome});
+        }
+      }
+      return render(out);
+    }
+  } else {
+    if(filtro){
+      const arr = Array.from(filtro.values()).filter(it=>TABELA1.has(it.codigo) && buscaNomeOk(it.nome, termo));
+      return render(arr);
+    } else {
+      const arr = Array.from(TABELA1.entries()).map(([codigo, nome])=>({codigo, nome})).filter(it=>buscaNomeOk(it.nome, termo));
+      return render(arr);
+    }
+  }
+}
+
+btnValidar.addEventListener("click", validar);
+btnLimpar.addEventListener("click", ()=>{ entrada.value=""; busca.value=""; validar(); });
+btnCopiar.addEventListener("click", ()=>{
+  const tmp = document.createElement("textarea");
+  tmp.value = saida.innerText;
+  document.body.appendChild(tmp);
+  tmp.select();
+  document.execCommand("copy");
+  document.body.removeChild(tmp);
+  btnCopiar.textContent = "Copiado!";
+  setTimeout(()=>btnCopiar.textContent="Copiar resultado", 1200);
+});
+
+validar();
+</script>
+</body>
+</html>
