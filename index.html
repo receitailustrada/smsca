@@ -530,17 +530,21 @@
     };
     localStorage.setItem("RXI_CONTEXT", JSON.stringify(payload));
 
-    // 2. Feedback Visual Rápido
+    // 2. Feedback Visual (Rápido)
     const dock = el('#dock');
     dock.style.background = "#0057FF";
     dock.style.color = "#fff";
     dock.innerHTML = "<div style='width:100%;text-align:center;font-weight:700'>Acessando...</div>";
-
-    // 3. Redirecionamento CORRETO para Google Sites (Saindo do iframe)
-    setTimeout(() => {
-        // Usa a URL completa do Google Sites e _top para sair do iframe
-        window.open("https://sites.google.com/view/cruzaltars/painel", "_top");
-    }, 500);
+    
+    // 3. REDIRECIONAMENTO IMEDIATO (Sem setTimeout)
+    // Criamos o link e clicamos nele no mesmo milissegundo
+    const link = document.createElement('a');
+    // CERTIFIQUE-SE QUE ESTE LINK ESTÁ EXATO (copie da barra de endereços do site publicado)
+    link.href = "https://sites.google.com/view/cruzaltars/painel"; 
+    link.target = "_top"; // _top força sair do iframe do Apps Script
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
   });
 
   // Init
