@@ -605,7 +605,7 @@
     </button>
     <button class="tab-btn" onclick="switchTab('visitas')">
         <i class="fa-solid fa-house-medical"></i> Cronograma VD
-    
+    </button>
   
     <button class="tab-btn" onclick="window.open('https://www.cruzaltars.com.br/início/hiperdia', '_blank')">
         <i class="fa-solid fa-heart"></i> Hiperdia
@@ -700,18 +700,12 @@
     const LINK_CSV_EDUCACAO = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRJEERpaf6eqezf9_2HtAn05EHXs-ShHfnvW-Na01IwfydNTZ424c4THbCFtUk_-IZ0lNKK-BDjDlBX/pub?gid=1482009319&single=true&output=csv";
     const LINK_CSV_VISITAS  = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRJEERpaf6eqezf9_2HtAn05EHXs-ShHfnvW-Na01IwfydNTZ424c4THbCFtUk_-IZ0lNKK-BDjDlBX/pub?gid=136584672&single=true&output=csv";
 
-    // CORES ATUALIZADAS (Enfermeiro=Roxo, Médico=Cinza Chumbo)
     const CAT_COLORS = {
         'Técnicos de enfermagem': { color: '#27ae60', icon: 'fa-user-nurse' },
-        
-        // Enfermeiros (Roxo) - Cobre Plural e Singular
         'Enfermeiros': { color: '#d63384', icon: 'fa-user-nurse' },
         'Enfermeiro':  { color: '#d63384', icon: 'fa-user-nurse' },
-
-        // Médicos (Cinza Chumbo) - Cobre Plural e Singular
         'Médicos': { color: '#546e7a', icon: 'fa-user-doctor' }, 
         'Médico':  { color: '#546e7a', icon: 'fa-user-doctor' },
-        
         'Dentistas': { color: '#0277bd', icon: 'fa-tooth' },
         'Recepcionistas': { color: '#ef6c00', icon: 'fa-clipboard-user' },
         'ACS': { color: '#d84315', icon: 'fa-users' },
@@ -749,7 +743,6 @@
         'DEFAULT': 'https://picsum.photos/seed/padrao/800/400'
     };
 
-    // PALETA PANTONE-LIKE (ORDEM CONSISTENTE PELO NOME DA ESF)
     const PANTONE_BASE = [
         { name: 'Blue Iris', h: 235 },
         { name: 'Indigo',    h: 220 },
@@ -760,15 +753,15 @@
         { name: 'Rose',      h: 350 }
     ];
 
-    let ESF_ORDER = [];           // lista única, ordenada
-    const ESF_PANTONE_MAP = {};   // { "ESF X ...": "#hex" }
+    let ESF_ORDER = [];
+    const ESF_PANTONE_MAP = {};
 
     function buildEsfPantoneMap() {
         ESF_ORDER = [...new Set(dbVisitas.map(v => normalizeEsfName(v.esf)).filter(Boolean))].sort();
         ESF_ORDER.forEach((esfName, idx) => {
             const base = PANTONE_BASE[idx % PANTONE_BASE.length];
-            const tier = Math.floor(idx / PANTONE_BASE.length);   // varia o tom a cada volta
-            const light = Math.min(42 + tier * 6, 62);            // 42..62
+            const tier = Math.floor(idx / PANTONE_BASE.length);
+            const light = Math.min(42 + tier * 6, 62);
             const hex = hslToHex(base.h, 70, light);
             ESF_PANTONE_MAP[esfName] = hex;
         });
@@ -783,28 +776,9 @@
     const ESF_COLOR_CACHE = {};
 
     window.onload = function() {
-    // 1. Verifica se viemos da tela de seleção (Workspace)
-    const contextoSalvo = localStorage.getItem("RXI_CONTEXT");
-    
-    if (contextoSalvo) {
-        const dados = JSON.parse(contextoSalvo);
-        console.log("Ambiente configurado para:", dados.n);
-        
-        // Se o usuário selecionou uma ESF, definimos como filtro ativo
-        if(dados.k === 'esf') {
-            // Ajusta o nome para bater com o filtro (ex: Remove "ESF " se necessário ou mantém)
-            // No seu código antigo, o filtro espera algo como "ESF ALVORADA" ou apenas "ALVORADA"
-            // Vamos tentar passar o nome completo
-            activeFilter = dados.n.toUpperCase(); 
-            
-            // Forçamos a aba de visitas se for uma ESF, para ver o cronograma dela?
-            // Se quiser forçar a aba de visitas, descomente a linha abaixo:
-            // currentTab = 'visitas'; 
-        }
-    }
+        carregarDados(); 
+    };
 
-    carregarDados(); 
-};
     function debouncedFilter() {
         if (_debounceTimer) clearTimeout(_debounceTimer);
         _debounceTimer = setTimeout(() => filterData(), 80);
@@ -846,45 +820,52 @@
 
             document.getElementById('loading').style.display = 'none';
             document.getElementById('grid-content').classList.remove('hidden');
-            switchTab('educacao');
-// ... (dentro do .then do carregarDados, perto da linha 725)
 
-            document.getElementById('grid-content').classList.remove('hidden');
+            // --- LÓGICA DE CONTEXTO DO WORKSPACE ---
+            const ctxRaw = localStorage.getItem("RXI_CONTEXT");
+            let hasContext = false;
             
-            // LÓGICA DE INTEGRAÇÃO RXI
-            const ctx = JSON.parse(localStorage.getItem("RXI_CONTEXT") || "{}");
-            
-            // Se tivermos um contexto de ESF e estivermos na aba de visitas (ou se você quiser forçar)
-            if (ctx && ctx.k === 'esf') {
-                 // Se quiser que ao selecionar ESF já caia na aba de cronograma:
-                 switchTab('visitas'); // Muda para a aba de visitas
-                 
-                 // Aplica o filtro visualmente e nos dados
-                 setTimeout(() => {
-                    // Tenta encontrar o botão do filtro correspondente
-                    const filters = document.querySelectorAll('.filter-pill');
-                    let targetBtn = null;
-                    
-                    // Procura o botão que contém o nome da ESF selecionada
-                    filters.forEach(btn => {
-                        if(btn.innerText.toUpperCase().includes(ctx.n.toUpperCase().replace('ESF ', ''))) {
-                            targetBtn = btn;
-                        }
-                    });
+            if (ctxRaw) {
+                try {
+                    const ctx = JSON.parse(ctxRaw);
+                    // Só aplica se for uma ESF por enquanto
+                    if (ctx && ctx.k === 'esf') {
+                        hasContext = true;
+                        switchTab('visitas'); // Muda a aba
+                        
+                        // Espera um pouco para renderizar os filtros e clica no botão certo
+                        setTimeout(() => {
+                            const filters = document.querySelectorAll('.filter-pill');
+                            let targetBtn = null;
+                            const searchName = ctx.n.toUpperCase();
+                            
+                            filters.forEach(btn => {
+                                const btnTxt = btn.innerText.toUpperCase();
+                                // Tenta dar match (Ex: "VILA NOVA" está dentro de "ESF VILA NOVA")
+                                if (btnTxt.includes(searchName) || searchName.includes(btnTxt)) {
+                                    targetBtn = btn;
+                                }
+                            });
 
-                    if(targetBtn) {
-                        targetBtn.click(); // Simula o clique para ativar cores e lógica
-                    } else {
-                        // Fallback se não achar o botão
-                        activeFilter = ctx.n;
-                        renderData();
+                            if (targetBtn) {
+                                targetBtn.click();
+                            } else {
+                                // Fallback se não achar o botão
+                                activeFilter = ctx.n;
+                                renderData();
+                            }
+                        }, 300);
                     }
-                 }, 500); // Pequeno delay para garantir que os botões de filtro foram renderizados
-            } else {
-                switchTab('educacao'); // Comportamento padrão
+                } catch(e) { console.error("Erro no contexto RXI", e); }
             }
-// ... fim do then
+
+            if (!hasContext) {
+                switchTab('educacao');
+            }
+            // ---------------------------------------
+
         }).catch(err => {
+            console.error(err);
             document.getElementById('loading').style.display = 'none';
             document.getElementById('error-msg').innerText = "Erro ao carregar dados.";
             document.getElementById('error-msg').style.display = 'block';
