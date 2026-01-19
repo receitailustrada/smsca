@@ -523,24 +523,24 @@
  el('#confirm').addEventListener('click', () => {
     if(!state.selected) return;
     
+    // 1. Salva o contexto
     const payload = {
       ...state.selected,
       timestamp: new Date().toISOString()
     };
-    
-    // Animação de saída
-    el('#dock').textContent = "Confirmado! Acessando..."; // Mudei o texto
-    el('#dock').style.background = "#0057FF"; // Azul para confirmar
-    el('#dock').style.color = "#fff";
-    
-    // Salva a escolha do usuário no navegador
     localStorage.setItem("RXI_CONTEXT", JSON.stringify(payload));
-    
+
+    // 2. Feedback Visual Rápido
+    const dock = el('#dock');
+    dock.style.background = "#0057FF";
+    dock.style.color = "#fff";
+    dock.innerHTML = "<div style='width:100%;text-align:center;font-weight:700'>Acessando...</div>";
+
+    // 3. Redirecionamento CORRETO para Google Sites (Saindo do iframe)
     setTimeout(() => {
-        // --- AQUI ESTÁ A MUDANÇA MÁGICA ---
-        // Redireciona para o arquivo do painel antigo
-        window.location.href = "painel.html"; 
-    }, 800);
+        // Usa a URL completa do Google Sites e _top para sair do iframe
+        window.open("https://sites.google.com/view/cruzaltars/painel", "_top");
+    }, 500);
   });
 
   // Init
